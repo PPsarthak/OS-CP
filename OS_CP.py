@@ -4,6 +4,7 @@ import tkinter.messagebox as mb
 
 import os
 import shutil
+import zipfile
 
 # Creating the backend functions
 def open_file():
@@ -83,6 +84,48 @@ def move_folder():
     except:
         mb.showerror('Error', 'We could not move your folder. Please make sure that the destination exists')
 
+def extract_zip_to_folder():
+    zip_path = fd.askopenfilename(title='Choose a ZIP file to extract', filetypes=[("ZIP files", "*.zip")])
+    extract_folder = fd.askdirectory(title="Choose the folder to extract to")
+
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_folder)
+        mb.showinfo(title='Extraction Complete', message='ZIP file extracted successfully.')
+    except Exception as e:
+        mb.showerror(title='Error', message=f'Error extracting ZIP file: {e}')
+
+
+def open_in_terminal():
+    folder = fd.askdirectory(title="Select Folder to open in terminal")
+    if folder:
+        os.system(f"start cmd /K cd /d {folder}")
+
+def show_properties():
+    path = fd.askopenfilename(title="Select File/Folder to show properties", filetypes=[("All files", "*.*")])
+    if path:
+        properties_wn = Toplevel(root)
+        properties_wn.title("Properties")
+        properties_wn.geometry("300x200")
+        properties_wn.resizable(0, 0)
+
+        Label(properties_wn, text="Properties of selected file/folder:", font=("Arial", 12)).pack(pady=10)
+
+        properties_text = Text(properties_wn, wrap=WORD, font=("Arial", 10))
+        properties_text.pack(fill=BOTH, expand=True, padx=10, pady=5)
+
+        properties = ""
+        if os.path.exists(path):
+            properties += f"Path: {path}\n"
+            properties += f"Size: {os.path.getsize(path)} bytes\n"
+            properties += f"Last Modified: {os.path.getmtime(path)}\n"
+            properties += f"Is Directory: {os.path.isdir(path)}\n"
+        else:
+            properties = "Selected file/folder does not exist."
+
+        properties_text.insert(END, properties)
+        properties_text.config(state=DISABLED)
+
 
 def list_files_in_folder():
     folder = fd.askdirectory(title='Select the folder whose files you want to list')
@@ -126,7 +169,7 @@ button_background = 'White'
 # Initializing the window
 root = Tk()
 root.title(title)
-root.geometry('320x400')
+root.geometry('320x480')
 root.resizable(0, 0)
 root.config(bg=background)
 
@@ -150,6 +193,12 @@ Button(root, text='Move a folder', width=20, font=button_font, bg=button_backgro
 Button(root, text='List all files in a folder', width=20, font=button_font, bg=button_background,
        command=list_files_in_folder).place(x=60, y=330)
 
+Button(root, text='Extract a ZIP to a Folder', width=20, font=button_font, bg=button_background, command=extract_zip_to_folder).place(x=60, y=370)
+
+Button(root, text='Open in Terminal', width=20, font=button_font, bg=button_background, command=open_in_terminal).place(x=60, y=410)
+
+# Adding the "Show Properties" button
+Button(root, text='Show Properties', width=20, font=button_font, bg=button_background, command=show_properties).place(x=60, y=450)
 # Finalizing the window
 root.update()
 root.mainloop()
