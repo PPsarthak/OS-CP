@@ -101,8 +101,54 @@ def open_in_terminal():
     if folder:
         os.system(f"start cmd /K cd /d {folder}")
 
+def search_file():
+    folder = fd.askdirectory(title="Select Folder to Search")
+    if not folder:
+        return  # User canceled
+
+    search_dialog = Toplevel(root)
+    search_dialog.title("Search for a File")
+    search_dialog.geometry("300x100")
+    search_dialog.resizable(0, 0)
+
+    Label(search_dialog, text="Enter the name of the file:", font=("Arial", 12)).pack(pady=10)
+
+    search_entry = Entry(search_dialog, font=("Arial", 10), width=30)
+    search_entry.pack()
+
+    def perform_search():
+        file_name = search_entry.get()
+        if file_name:
+            results = [file for file in os.listdir(folder) if file_name in file]
+            if results:
+                results_wn = Toplevel(search_dialog)
+                results_wn.title("Search Results")
+                results_wn.geometry("400x300")
+                results_wn.resizable(0, 0)
+
+                listbox = Listbox(results_wn, selectbackground='SteelBlue', font=("Arial", 10), height=15, width=50)
+
+                scrollbar = Scrollbar(listbox, orient=VERTICAL, command=listbox.yview)
+                scrollbar.pack(side=RIGHT, fill=Y)
+
+                listbox.config(yscrollcommand=scrollbar.set)
+                listbox.pack(padx=10, pady=10, fill=BOTH, expand=True)
+
+                for result in results:
+                    listbox.insert(END, result)
+
+            else:
+                mb.showinfo("Search Results", "No matching files found.")
+        else:
+            mb.showinfo("Search Results", "Please enter a valid file name.")
+
+    search_button = Button(search_dialog, text="Search", font=("Arial", 10), command=perform_search)
+    search_button.pack(pady=5)
+
+
 def show_properties():
     path = fd.askopenfilename(title="Select File/Folder to show properties", filetypes=[("All files", "*.*")])
+    # path = fd.askdirectory(title="Select File/Folder to show properties")
     if path:
         properties_wn = Toplevel(root)
         properties_wn.title("Properties")
@@ -163,13 +209,14 @@ def list_files_in_folder():
 title = 'ET-C3 Group 2 File Manager'
 background = 'Grey'
 
-button_font = ("Times New Roman", 13)
+# button_font = ("Times New Roman", 13)
+button_font = ("Bell Gothic Std Light", 13)
 button_background = 'White'
 
 # Initializing the window
 root = Tk()
 root.title(title)
-root.geometry('320x480')
+root.geometry('320x530')
 root.resizable(0, 0)
 root.config(bg=background)
 
@@ -199,6 +246,9 @@ Button(root, text='Open in Terminal', width=20, font=button_font, bg=button_back
 
 # Adding the "Show Properties" button
 Button(root, text='Show Properties', width=20, font=button_font, bg=button_background, command=show_properties).place(x=60, y=450)
+
+Button(root, text='Search for a File', width=20, font=button_font, bg=button_background, command=search_file).place(x=60, y=490)
+
 # Finalizing the window
 root.update()
 root.mainloop()
