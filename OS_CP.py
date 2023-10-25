@@ -5,7 +5,7 @@ import tkinter.messagebox as mb
 import os
 import shutil
 import zipfile
-from tkinter import filedialog
+from tkinter import filedialog, messagebox, simpledialog
 
 
 # Creating the backend functions
@@ -333,6 +333,33 @@ def on_closing():
             window.destroy()
     root.destroy()
 
+def rename_files_with_prefix():
+    # root = tk.Tk()
+    # root.withdraw()  # Hide the main window
+
+    # Ask for the prefix
+    prefix = simpledialog.askstring("Input", "Enter the prefix:")
+    if not prefix:
+        messagebox.showwarning("Error", "Please enter a valid prefix.")
+        return
+
+    # Ask for files to rename
+    files = filedialog.askopenfilenames(title='Choose files to rename', filetypes=[("All files", "*.*")])
+    if not files:
+        messagebox.showwarning("Error", "Please select files to rename.")
+        return
+
+    # Rename files
+    for i, old_path in enumerate(files):
+        new_name = f"{prefix} {i+1}{os.path.splitext(old_path)[1]}"
+        new_path = os.path.join(os.path.dirname(old_path), new_name)
+
+        try:
+            os.rename(old_path, new_path)
+        except Exception as e:
+            messagebox.showerror("Error", f"Error renaming file {old_path}: {e}")
+
+    messagebox.showinfo("Success", "Files renamed successfully.")
 
 ## GUI ##
 
@@ -350,7 +377,8 @@ button_functions = {
     'Open in Terminal': open_in_terminal,
     'Show Properties': show_properties,
     'Search for a File': search_file,
-    'Preview File': preview_file
+    'Preview File': preview_file,
+    'Power Rename':rename_files_with_prefix
 }
 
 # Defining the variables
@@ -360,7 +388,7 @@ background = '#F0F0F0'  # Light gray background
 # Initializing the window
 root = Tk()
 root.title(title)
-root.geometry('400x430')  # Adjusted dimensions
+root.geometry('400x350')  # Adjusted dimensions
 root.resizable(0, 0)
 root.config(bg=background)
 
