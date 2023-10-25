@@ -174,14 +174,45 @@ def show_properties():
         properties_text.insert(END, properties)
         properties_text.config(state=DISABLED)
 
+def sort_files(directory, criterion="name"):
+    files = os.listdir(directory)
+    if criterion == "name":
+        return sorted(files)
+    elif criterion == "size":
+        return sorted(files, key=lambda f: os.path.getsize(os.path.join(directory, f)))
+    elif criterion == "date":
+        return sorted(files, key=lambda f: os.path.getmtime(os.path.join(directory, f)))
+
+def sort_files_and_update_listbox(listbox, directory, criterion):
+    listbox.delete(0, END)  # Clear the current listbox content
+    sorted_files = sort_files(directory, criterion)
+    for file in sorted_files:
+        listbox.insert(END, file)
+
+
+def show_sort_menu(listbox, directory):
+    sort_menu = Toplevel(root)
+    sort_menu.title("Sort Files")
+    sort_menu.geometry("300x250")
+    sort_menu.resizable(0, 0)
+
+    Label(sort_menu, text="Sort Files by:", font=("Arial", 12)).pack(pady=10)
+
+    def sort_and_update(criterion):
+        sort_files_and_update_listbox(listbox, directory, criterion)
+        sort_menu.destroy()
+
+    # Create buttons for different sorting options
+    ttk.Button(sort_menu, text="Name", command=lambda: sort_and_update("name")).pack(pady=5)
+    ttk.Button(sort_menu, text="Size", command=lambda: sort_and_update("size")).pack(pady=5)
+    ttk.Button(sort_menu, text="Date", command=lambda: sort_and_update("date")).pack(pady=5)
+
 
 def list_files_in_folder():
     folder = fd.askdirectory(title='Select the folder whose files you want to list')
 
     if not folder:
         return  # User canceled
-
-    files = os.listdir(folder)
 
     list_files_wn = Toplevel(root)
     list_files_wn.title('Files in your selected folder')
@@ -195,15 +226,47 @@ def list_files_in_folder():
 
     listbox.config(yscrollcommand=scrollbar.set)
     listbox.pack(padx=10, pady=10, fill=BOTH, expand=True)
-    
-    count = 0
-    for file in files:
-        listbox.insert(END, file)
-        count += 1
+
+    # Populate the listbox with sorted files based on the default criterion (name)
+    sort_files_and_update_listbox(listbox, folder, "name")
 
     listbox.insert(END, "")
-    listbox.insert(END, "Num of files = {}".format(count))
+    listbox.insert(END, "Num of files = {}".format(len(os.listdir(folder))))
+
+    # Add a "Sort Files" button
+    sort_button = ttk.Button(list_files_wn, text="Sort Files", command=lambda: show_sort_menu(listbox, folder))
+    sort_button.pack(pady=10)
+
     list_files_wn.mainloop()  # Start the list_files_wn main loop
+
+    # folder = fd.askdirectory(title='Select the folder whose files you want to list')
+
+    # if not folder:
+    #     return  # User canceled
+
+    # files = os.listdir(folder)
+
+    # list_files_wn = Toplevel(root)
+    # list_files_wn.title('Files in your selected folder')
+    # list_files_wn.geometry('300x400')
+    # list_files_wn.resizable(0, 0)
+
+    # listbox = Listbox(list_files_wn, selectbackground='SteelBlue', font=("Georgia", 10), height=15, width=40)
+
+    # scrollbar = Scrollbar(listbox, orient=VERTICAL, command=listbox.yview)
+    # scrollbar.pack(side=RIGHT, fill=Y)
+
+    # listbox.config(yscrollcommand=scrollbar.set)
+    # listbox.pack(padx=10, pady=10, fill=BOTH, expand=True)
+    
+    # count = 0
+    # for file in files:
+    #     listbox.insert(END, file)
+    #     count += 1
+
+    # listbox.insert(END, "")
+    # listbox.insert(END, "Num of files = {}".format(count))
+    # list_files_wn.mainloop()  # Start the list_files_wn main loop
 
 
 def preview_file():
@@ -263,6 +326,13 @@ def preview_file():
 
     list_files_wn.mainloop()  # Start the list_files_wn main loop
 
+def on_closing():
+    # Destroy all Toplevel windows before closing the main window
+    for window in root.winfo_children():
+        if isinstance(window, Toplevel):
+            window.destroy()
+    root.destroy()
+
 
 ## GUI ##
 
@@ -293,6 +363,9 @@ root.title(title)
 root.geometry('400x430')  # Adjusted dimensions
 root.resizable(0, 0)
 root.config(bg=background)
+
+# Bind the closing event of the main window to the on_closing function
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
 # Creating and placing the components in the window
 Label(root, text=title, font=("Arial", 15), bg=background, padx= 5, pady=5).grid(row=0, column=0, columnspan=10)
